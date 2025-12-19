@@ -1,5 +1,6 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 // ============================================================================
 // User
@@ -224,37 +225,22 @@ pub struct HostSummaryResponse {
     /// Site quality index
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sqi: Option<f64>,
-    /// Indexing statistics
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub indexing: Option<IndexingStats>,
-    /// Search query statistics
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub search_queries: Option<SearchQueriesStats>,
+    /// Number of searchable pages
+    #[serde(default)]
+    pub searchable_pages_count: i64,
+    /// Number of excluded pages
+    #[serde(default)]
+    pub excluded_pages_count: i64,
+    /// Site problems grouped by severity
+    #[serde(default)]
+    pub site_problems: HashMap<SiteProblemSeverityEnum, i32>,
 }
 
-/// Indexing statistics
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct IndexingStats {
-    /// Total pages indexed
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub total_pages: Option<i64>,
-    /// Pages in search results
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pages_in_search: Option<i64>,
-}
-
-/// Search queries statistics
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct SearchQueriesStats {
-    /// Total queries
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub total_queries: Option<i64>,
-    /// Total shows
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub total_shows: Option<i64>,
-    /// Total clicks
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub total_clicks: Option<i64>,
+/// Excluded pages statistics by status
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExcludedPagesStatistics {
+    /// Statistics by status
+    pub statuses: HashMap<ApiExcludedUrlStatus, i64>,
 }
 
 /// Site quality index history request
@@ -551,57 +537,152 @@ pub struct AddSitemapResponse {
 // Indexing
 // ============================================================================
 
+/// Indexing status by HTTP code
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum IndexingStatusEnum {
+    /// HTTP 2xx responses
+    #[serde(rename = "HTTP_2XX")]
+    Http2xx,
+    /// HTTP 3xx responses
+    #[serde(rename = "HTTP_3XX")]
+    Http3xx,
+    /// HTTP 4xx responses
+    #[serde(rename = "HTTP_4XX")]
+    Http4xx,
+    /// HTTP 5xx responses
+    #[serde(rename = "HTTP_5XX")]
+    Http5xx,
+    /// Other statuses
+    Other,
+}
+
+/// Site problem severity
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SiteProblemSeverityEnum {
+    /// Fatal problems
+    Fatal,
+    /// Critical problems
+    Critical,
+    /// Possible problems
+    PossibleProblem,
+    /// Recommendations
+    Recommendation,
+}
+
+/// Excluded URL status
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiExcludedUrlStatus {
+    /// No exclusion found
+    NothingFound,
+    /// Forbidden by robots.txt
+    ForbiddenByRobotsTxt,
+    /// URL not allowed
+    UrlNotAllowed,
+    /// Contains noindex meta tag
+    ContainsNoindexMetaTag,
+    /// Contains noindex X-Robots-Tag header
+    ContainsNoindexXRobotsTagHeader,
+    /// Sitemap forbidden
+    SitemapForbidden,
+    /// Sitemap not allowed
+    SitemapNotAllowed,
+    /// Low quality
+    LowQuality,
+    /// Alternative duplicate
+    AlternativeDuplicate,
+    /// User duplicate
+    UserDuplicate,
+    /// Canonical duplicate
+    CanonicalDuplicate,
+    /// Redirect duplicate
+    RedirectDuplicate,
+    /// Moved permanently
+    MovedPermanently,
+    /// Moved temporarily
+    MovedTemporarily,
+    /// Malware detected
+    MalwareDetected,
+    /// Phishing detected
+    PhishingDetected,
+    /// Adult content
+    AdultContent,
+    /// Other reason
+    OtherReason,
+}
+
+/// Important URL change indicator
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiImportantUrlChangeIndicator {
+    /// Indexing HTTP code
+    IndexingHttpCode,
+    /// Search status
+    SearchStatus,
+    /// Page title
+    Title,
+    /// Page description
+    Description,
+}
+
 /// Indexing history request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct IndexingHistoryRequest {
-    /// Date from (ISO 8601 format)
+    /// Date from
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_from: Option<String>,
-    /// Date to (ISO 8601 format)
+    pub date_from: Option<DateTime<Utc>>,
+    /// Date to
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_to: Option<String>,
+    pub date_to: Option<DateTime<Utc>>,
 }
 
 /// Indexing history response
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IndexingHistoryResponse {
-    /// History indicators
-    pub indicators: Vec<IndexingIndicator>,
-}
-
-/// Indexing indicator
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct IndexingIndicator {
-    /// Indicator type
-    pub indicator: String,
-    /// History points
-    pub points: Vec<IndexingPoint>,
+    /// History indicators by status
+    pub indicators: HashMap<IndexingStatusEnum, Vec<IndexingHistoryPoint>>,
 }
 
 /// Indexing history point
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct IndexingPoint {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct IndexingHistoryPoint {
     /// Date
     pub date: DateTime<Utc>,
     /// Value
-    pub value: i64,
+    pub value: f64,
+}
+
+/// Get indexing samples request
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct GetIndexingSamplesRequest {
+    /// Offset for pagination
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<i32>,
+    /// Limit for pagination
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
 }
 
 /// Indexing samples response
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct IndexingSamplesResponse {
     /// Sample URLs
-    pub samples: Vec<UrlSample>,
+    pub samples: Vec<IndexingSample>,
+    /// Total count
+    pub count: i32,
 }
 
-/// URL sample
+/// Indexing sample
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct UrlSample {
+pub struct IndexingSample {
     /// URL
     pub url: String,
+    /// HTTP status code
+    pub http_code: i32,
     /// Last access date
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_access: Option<DateTime<Utc>>,
+    pub access_date: DateTime<Utc>,
 }
 
 // ============================================================================
@@ -749,21 +830,69 @@ pub enum DiagnosticSeverity {
 // ============================================================================
 
 /// Important URLs response
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ImportantUrlsResponse {
     /// URLs
     pub urls: Vec<ImportantUrl>,
 }
 
 /// Important URL information
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ImportantUrl {
-    /// URL
+    /// Site page URL
     pub url: String,
-    /// Priority
+    /// Date and time the page status information was updated
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub priority: Option<i32>,
-    /// Status
+    pub update_date: Option<DateTime<Utc>>,
+    /// Indicator of changes from previous check
+    #[serde(default)]
+    pub change_indicators: Vec<ApiImportantUrlChangeIndicator>,
+    /// Information about page indexing by the robot
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
+    pub indexing_status: Option<IndexingStatus>,
+    /// State of the page in search results
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_status: Option<SearchStatus>,
+}
+
+/// Page indexing status
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct IndexingStatus {
+    /// Generalized status of the HTTP code
+    pub status: IndexingStatusEnum,
+    /// HTTP code
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub http_code: Option<i32>,
+    /// Date the page was crawled
+    pub access_date: DateTime<Utc>,
+}
+
+/// Page search status
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SearchStatus {
+    /// Page heading
+    pub title: String,
+    /// Description meta tag content
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// Date when page was last crawled before appearing or being excluded
+    pub last_access: DateTime<Utc>,
+    /// Reason the page was excluded
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_url_status: Option<ApiExcludedUrlStatus>,
+    /// Page's HTTP response code for HTTP_ERROR status
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bad_http_status: Option<i32>,
+    /// Whether page is present in search results
+    pub searchable: bool,
+    /// Another address of the page (redirect target, canonical, or duplicate)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_url: Option<String>,
+}
+
+/// Important URL history response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ImportantUrlHistoryResponse {
+    /// History of changes to the page
+    pub history: Vec<ImportantUrl>,
 }

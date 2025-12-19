@@ -339,18 +339,28 @@ impl YandexWebmasterClient {
         request: &IndexingHistoryRequest,
     ) -> Result<IndexingHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/indexing/history",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/indexing/history?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     /// Get sample indexed pages
     #[instrument(skip(self))]
-    pub async fn get_indexing_samples(&self, host_id: &str) -> Result<IndexingSamplesResponse> {
+    pub async fn get_indexing_samples(
+        &self,
+        host_id: &str,
+        request: &GetIndexingSamplesRequest,
+    ) -> Result<IndexingSamplesResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/indexing/samples",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/indexing/samples?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -422,10 +432,17 @@ impl YandexWebmasterClient {
 
     /// Get important URLs history
     #[instrument(skip(self))]
-    pub async fn get_important_urls_history(&self, host_id: &str) -> Result<ImportantUrlsResponse> {
+    pub async fn get_important_urls_history(
+        &self,
+        host_id: &str,
+        url_param: &str,
+    ) -> Result<ImportantUrlHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/important-urls/history",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/important-urls/history?url={}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            urlencoding::encode(url_param)
         );
         self.get(&url).await
     }
