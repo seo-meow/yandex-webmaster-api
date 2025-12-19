@@ -437,15 +437,51 @@ pub struct QueryHistoryResponse {
 // Sitemaps
 // ============================================================================
 
+/// Source of the Sitemap file
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiSitemapSource {
+    /// Sitemap is specified in the site's robots.txt file
+    RobotsTxt,
+    /// The user added the Sitemap in Yandex.Webmaster
+    Webmaster,
+    /// Sitemap found in another (index) Sitemap file
+    IndexSitemap,
+}
+
+/// Type of Sitemap file
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiSitemapType {
+    /// Normal Sitemap file that contains the URLs of site pages
+    Sitemap,
+    /// The Sitemap index file that contains the URLs of other Sitemap files
+    IndexSitemap,
+}
+
+/// Request parameters for getting sitemaps
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct GetSitemapsRequest {
+    /// Parent sitemap ID
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
+    /// Page size (1-100, default: 10)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+    /// Get sitemaps starting after this ID (not including it)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+}
+
 /// List of sitemaps
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SitemapsResponse {
     /// Sitemaps
     pub sitemaps: Vec<SitemapInfo>,
 }
 
 /// Sitemap information
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SitemapInfo {
     /// Sitemap ID
     pub sitemap_id: String,
@@ -454,9 +490,47 @@ pub struct SitemapInfo {
     /// Last access date
     #[serde(skip_serializing_if = "Option::is_none")]
     pub last_access_date: Option<DateTime<Utc>>,
-    /// Number of URLs in sitemap
+    /// Number of errors in the file
+    pub errors_count: i32,
+    /// Number of URLs in the file
+    pub urls_count: i64,
+    /// Number of child Sitemap files
+    pub children_count: i32,
+    /// Sources that led the robot to this file
+    pub sources: Vec<ApiSitemapSource>,
+    /// Type of the Sitemap file
+    pub sitemap_type: ApiSitemapType,
+}
+
+/// Request parameters for getting user-added sitemaps
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct GetUserSitemapsRequest {
+    /// Get files starting from the specified one (not including it, default: 0)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub urls_count: Option<i64>,
+    pub offset: Option<i32>,
+    /// Page size (1-100, default: 100)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
+/// List of user-added sitemaps
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct UserSitemapsResponse {
+    /// Sitemaps
+    pub sitemaps: Vec<UserSitemapInfo>,
+    /// Total number of Sitemap files added by the user
+    pub count: i32,
+}
+
+/// User-added sitemap information
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct UserSitemapInfo {
+    /// Sitemap ID
+    pub sitemap_id: String,
+    /// Sitemap URL
+    pub sitemap_url: String,
+    /// Date the file was added
+    pub added_date: DateTime<Utc>,
 }
 
 /// Request to add a sitemap

@@ -2,7 +2,7 @@ use chrono::{Duration, Utc};
 use rand::distr::{Alphanumeric, SampleString};
 use std::fs::File;
 use std::io::Read;
-use yandex_webmaster_api::{AddHostRequest, ApiQueryIndicator, ApiQueryOrderField, ExplicitVerificationType, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
+use yandex_webmaster_api::{AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField, ExplicitVerificationType, GetSitemapsRequest, GetUserSitemapsRequest, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
 
 async fn new_client() -> anyhow::Result<YandexWebmasterClient> {
     let mut str = String::new();
@@ -214,6 +214,53 @@ async fn get_search_queries() -> anyhow::Result<()> {
         .await?;
 
     dbg!(&history);
+
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+async fn work_with_sitemaps() -> anyhow::Result<()> {
+    let client = new_client().await?;
+
+    let host = client
+        .get_hosts()
+        .await?
+        .into_iter()
+        .find(|s| s.verified)
+        .unwrap();
+
+    dbg!(&host);
+
+    let sm = client.add_sitemap(&host.host_id, &AddSitemapRequest {
+        url: format!("{}sitemap-test.xml", &host.ascii_host_url),
+    }).await?;
+
+    dbg!(&sm);
+
+    let sitemaps = client.get_sitemaps(&host.host_id, &GetSitemapsRequest {
+        parent_id: None,
+        limit: None,
+        from: None,
+    }).await?;
+
+    dbg!(&sitemaps);
+
+    let sitemap = client.get_sitemap(&host.host_id, &sitemaps.sitemaps.first().unwrap().sitemap_id).await?;
+
+    dbg!(&sitemap);
+
+    let user_sitemaps = client.get_user_sitemaps(&host.host_id, &GetUserSitemapsRequest {
+        offset: None,
+        limit: None,
+    }).await?;
+    dbg!(&user_sitemaps);
+
+    let user_sitemap = client.get_user_sitemap(&host.host_id, &user_sitemaps.sitemaps.first().unwrap().sitemap_id).await?;
+
+    dbg!(&user_sitemap);
+
+    client.delete_sitemap(&host.host_id, &sm.sitemap_id).await?;
 
     Ok(())
 }

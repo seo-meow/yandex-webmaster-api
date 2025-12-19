@@ -50,8 +50,7 @@ impl YandexWebmasterClient {
         Ok(Self {
             client,
             user_id: user_response.user_id,
-            qs: serde_qs::Config::new()
-                .array_format(ArrayFormat::Unindexed),
+            qs: serde_qs::Config::new().array_format(ArrayFormat::Unindexed),
         })
     }
 
@@ -248,10 +247,17 @@ impl YandexWebmasterClient {
 
     /// Get list of all sitemap files
     #[instrument(skip(self))]
-    pub async fn get_sitemaps(&self, host_id: &str) -> Result<SitemapsResponse> {
+    pub async fn get_sitemaps(
+        &self,
+        host_id: &str,
+        request: &GetSitemapsRequest,
+    ) -> Result<SitemapsResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/sitemaps",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/sitemaps?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -268,10 +274,17 @@ impl YandexWebmasterClient {
 
     /// Get list of user-submitted sitemaps
     #[instrument(skip(self))]
-    pub async fn get_user_sitemaps(&self, host_id: &str) -> Result<SitemapsResponse> {
+    pub async fn get_user_sitemaps(
+        &self,
+        host_id: &str,
+        request: &GetUserSitemapsRequest,
+    ) -> Result<UserSitemapsResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/user-added-sitemaps",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/user-added-sitemaps?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -292,7 +305,11 @@ impl YandexWebmasterClient {
 
     /// Get user-submitted sitemap details
     #[instrument(skip(self))]
-    pub async fn get_user_sitemap(&self, host_id: &str, sitemap_id: &str) -> Result<SitemapInfo> {
+    pub async fn get_user_sitemap(
+        &self,
+        host_id: &str,
+        sitemap_id: &str,
+    ) -> Result<UserSitemapInfo> {
         let url = format!(
             "{}/user/{}/hosts/{}/user-added-sitemaps/{}",
             API_BASE_URL, self.user_id, host_id, sitemap_id
