@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use reqwest_middleware::ClientBuilder;
+use serde_qs::ArrayFormat;
 use tracing::instrument;
 
 use crate::{
@@ -16,6 +16,7 @@ const API_BASE_URL: &str = "https://api.webmaster.yandex.net/v4";
 pub struct YandexWebmasterClient {
     client: reqwest_middleware::ClientWithMiddleware,
     user_id: i64,
+    qs: serde_qs::Config,
 }
 
 impl YandexWebmasterClient {
@@ -49,6 +50,8 @@ impl YandexWebmasterClient {
         Ok(Self {
             client,
             user_id: user_response.user_id,
+            qs: serde_qs::Config::new()
+                .array_format(ArrayFormat::Unindexed),
         })
     }
 
@@ -166,10 +169,17 @@ impl YandexWebmasterClient {
 
     /// Get site quality index history
     #[instrument(skip(self))]
-    pub async fn get_sqi_history(&self, host_id: &str, req: SqiHistoryRequest) -> Result<Vec<SqiPoint>> {
+    pub async fn get_sqi_history(
+        &self,
+        host_id: &str,
+        req: SqiHistoryRequest,
+    ) -> Result<Vec<SqiPoint>> {
         let url = format!(
             "{}/user/{}/hosts/{}/sqi-history?{}",
-            API_BASE_URL, self.user_id, host_id, serde_qs::to_string(&req)?
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(&req)?
         );
         let result: SqiHistoryResponse = self.get(&url).await?;
         Ok(result.points)
@@ -181,10 +191,17 @@ impl YandexWebmasterClient {
 
     /// Get popular search queries for a site
     #[instrument(skip(self))]
-    pub async fn get_popular_queries(&self, host_id: &str) -> Result<PopularQueriesResponse> {
+    pub async fn get_popular_queries(
+        &self,
+        host_id: &str,
+        request: &PopularQueriesRequest,
+    ) -> Result<PopularQueriesResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-queries/popular",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/search-queries/popular?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -194,13 +211,16 @@ impl YandexWebmasterClient {
     pub async fn get_query_analytics(
         &self,
         host_id: &str,
-        request: &QueryHistoryRequest,
-    ) -> Result<QueryHistoryResponse> {
+        request: &QueryAnalyticsRequest,
+    ) -> Result<QueryAnalyticsResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-queries/all/history",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/search-queries/all/history?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     /// Get statistics for a specific query
@@ -212,10 +232,14 @@ impl YandexWebmasterClient {
         request: &QueryHistoryRequest,
     ) -> Result<QueryHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-queries/{}/history",
-            API_BASE_URL, self.user_id, host_id, query_id
+            "{}/user/{}/hosts/{}/search-queries/{}/history?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            query_id,
+            self.qs.serialize_string(request)?
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     // ============================================================================

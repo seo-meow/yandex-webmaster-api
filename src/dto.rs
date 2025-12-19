@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 
 // ============================================================================
@@ -32,7 +32,7 @@ pub enum HostDataStatus {
     /// The site data isn't uploaded to Yandex.Webmaster yet.
     NotLoaded,
     /// The site is indexed. The data is available in Yandex.Webmaster.
-    Ok
+    Ok,
 }
 
 /// Information about a host
@@ -284,60 +284,153 @@ pub struct SqiPoint {
 // Search Queries
 // ============================================================================
 
-/// Popular search queries
+/// Query sorting order field
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiQueryOrderField {
+    /// Sort by total shows
+    TotalShows,
+    /// Sort by total clicks
+    TotalClicks,
+}
+
+/// Query indicators
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiQueryIndicator {
+    /// Total number of shows
+    TotalShows,
+    /// Total number of clicks
+    TotalClicks,
+    /// Average show position
+    AvgShowPosition,
+    /// Average click position
+    AvgClickPosition,
+}
+
+/// Device type indicator
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiDeviceTypeIndicator {
+    /// All device types
+    #[default]
+    All,
+    /// Desktop computers
+    Desktop,
+    /// Mobile phones and tablets
+    MobileAndTablet,
+    /// Mobile phones only
+    Mobile,
+    /// Tablets only
+    Tablet,
+}
+
+/// Popular queries request parameters
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PopularQueriesRequest {
+    /// Indicator for sorting requests (required)
+    pub order_by: ApiQueryOrderField,
+    /// Indicators for displaying requests
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub query_indicator: Option<ApiQueryIndicator>,
+    /// Device type indicator (default: ALL)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_type_indicator: Option<ApiDeviceTypeIndicator>,
+    /// Start date of the range
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_from: Option<NaiveDate>,
+    /// End date of the range
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_to: Option<NaiveDate>,
+    /// List offset (minimum: 0, default: 0)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<i32>,
+    /// Page size (1-500, default: 500)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
+/// Popular search queries response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PopularQueriesResponse {
     /// List of queries
     pub queries: Vec<PopularQuery>,
+    /// Start date of the range
+    pub date_from: NaiveDate,
+    /// End date of the range
+    pub date_to: NaiveDate,
+    /// Total number of search queries available
+    pub count: i32,
 }
 
 /// Popular query information
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct PopularQuery {
     /// Query ID
     pub query_id: String,
     /// Query text
     pub query_text: String,
-    /// Number of impressions
+    /// Query indicators (e.g., TOTAL_SHOWS, TOTAL_CLICKS, etc.)
+    pub indicators: std::collections::HashMap<ApiQueryIndicator, f64>,
+}
+
+/// Query analytics request parameters
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct QueryAnalyticsRequest {
+    /// Indicators for displaying requests (can specify multiple)
+    pub query_indicator: Vec<ApiQueryIndicator>,
+    /// Device type indicator (default: ALL)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub impressions: Option<i64>,
-    /// Number of clicks
+    pub device_type_indicator: Option<ApiDeviceTypeIndicator>,
+    /// Start date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub clicks: Option<i64>,
+    pub date_from: Option<DateTime<Utc>>,
+    /// End date of the range
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_to: Option<DateTime<Utc>>,
+}
+
+/// Query analytics response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct QueryAnalyticsResponse {
+    /// Map of indicators to their history points
+    pub indicators: std::collections::HashMap<ApiQueryIndicator, Vec<IndicatorPoint>>,
+}
+
+/// Single indicator history point
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct IndicatorPoint {
+    /// Date
+    pub date: DateTime<Utc>,
+    /// Value
+    pub value: f64,
 }
 
 /// Query history request parameters
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QueryHistoryRequest {
-    /// Date from (ISO 8601 format)
+    /// Indicators for displaying requests (can specify multiple)
+    pub query_indicator: Vec<ApiQueryIndicator>,
+    /// Device type indicator (default: ALL)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_from: Option<String>,
-    /// Date to (ISO 8601 format)
+    pub device_type_indicator: Option<ApiDeviceTypeIndicator>,
+    /// Start date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub date_to: Option<String>,
+    pub date_from: Option<NaiveDate>,
+    /// End date of the range
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_to: Option<NaiveDate>,
 }
 
 /// Query history response
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct QueryHistoryResponse {
-    /// History points
-    pub points: Vec<QueryHistoryPoint>,
-}
-
-/// Single query history point
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct QueryHistoryPoint {
-    /// Date
-    pub date: DateTime<Utc>,
-    /// Number of impressions
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub impressions: Option<i64>,
-    /// Number of clicks
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub clicks: Option<i64>,
-    /// Average position
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub position: Option<f64>,
+    /// Search query ID
+    pub query_id: String,
+    /// Search query text
+    pub query_text: String,
+    /// Map of indicators to their history points
+    pub indicators: std::collections::HashMap<ApiQueryIndicator, Vec<IndicatorPoint>>,
 }
 
 // ============================================================================

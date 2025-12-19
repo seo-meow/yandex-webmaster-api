@@ -1,8 +1,8 @@
+use chrono::{Duration, Utc};
 use rand::distr::{Alphanumeric, SampleString};
 use std::fs::File;
 use std::io::Read;
-use chrono::{Duration, Utc};
-use yandex_webmaster_api::{AddHostRequest, ExplicitVerificationType, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
+use yandex_webmaster_api::{AddHostRequest, ApiQueryIndicator, ApiQueryOrderField, ExplicitVerificationType, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
 
 async fn new_client() -> anyhow::Result<YandexWebmasterClient> {
     let mut str = String::new();
@@ -51,14 +51,18 @@ async fn should_get_host() -> anyhow::Result<()> {
 async fn should_create_and_verify_host() -> anyhow::Result<()> {
     let client = new_client().await?;
 
-    let host = client.add_host(&AddHostRequest {
-        host_url: generate_random_host(),
-        verification_type: VerificationType::Dns,
-    }).await?;
+    let host = client
+        .add_host(&AddHostRequest {
+            host_url: generate_random_host(),
+            verification_type: VerificationType::Dns,
+        })
+        .await?;
 
     dbg!(&host);
 
-    let info = client.verify_host(&host.host_id, ExplicitVerificationType::MetaTag).await?;
+    let info = client
+        .verify_host(&host.host_id, ExplicitVerificationType::MetaTag)
+        .await?;
 
     assert_eq!(info.verification_state, VerificationState::InProgress);
     assert_eq!(info.verification_type, VerificationType::MetaTag);
@@ -85,7 +89,9 @@ async fn should_create_and_verify_host() -> anyhow::Result<()> {
 async fn get_host_owners() -> anyhow::Result<()> {
     let client = new_client().await?;
 
-    let host = client.get_hosts().await?
+    let host = client
+        .get_hosts()
+        .await?
         .into_iter()
         .find(|s| s.verified)
         .unwrap();
@@ -104,19 +110,108 @@ async fn get_host_owners() -> anyhow::Result<()> {
 async fn get_sqi() -> anyhow::Result<()> {
     let client = new_client().await?;
 
-    let host = client.get_hosts().await?
+    let host = client
+        .get_hosts()
+        .await?
         .into_iter()
         .find(|s| s.verified)
         .unwrap();
 
-    let history = client.get_sqi_history(&host.host_id, SqiHistoryRequest {
-        date_from: Some(Utc::now()),
-        date_to: Some(Utc::now() - Duration::days(10)),
-    }).await?;
+    let history = client
+        .get_sqi_history(
+            &host.host_id,
+            SqiHistoryRequest {
+                date_from: Some(Utc::now()),
+                date_to: Some(Utc::now() - Duration::days(10)),
+            },
+        )
+        .await?;
 
     dbg!(&history);
 
-    let history = client.get_sqi_history(&host.host_id, SqiHistoryRequest::default()).await?;
+    let history = client
+        .get_sqi_history(&host.host_id, SqiHistoryRequest::default())
+        .await?;
+
+    dbg!(&history);
+
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+async fn get_search_queries() -> anyhow::Result<()> {
+    let client = new_client().await?;
+
+    let host = client
+        .get_hosts()
+        .await?
+        .into_iter()
+        .find(|s| s.verified)
+        .unwrap();
+
+    dbg!(&host);
+
+    let queries = client
+        .get_popular_queries(
+            &host.host_id,
+            &PopularQueriesRequest {
+                order_by: ApiQueryOrderField::TotalShows,
+                query_indicator: None,
+                device_type_indicator: None,
+                date_from: None,
+                date_to: None,
+                offset: None,
+                limit: None,
+            },
+        )
+        .await?;
+
+    dbg!(&queries);
+
+    let history = client
+        .get_query_analytics(
+            &host.host_id,
+            &QueryAnalyticsRequest {
+                query_indicator: vec![
+                    ApiQueryIndicator::AvgClickPosition,
+                    ApiQueryIndicator::AvgShowPosition,
+                    ApiQueryIndicator::TotalClicks,
+                    ApiQueryIndicator::TotalShows,
+                ],
+                device_type_indicator: None,
+                date_from: Some(Utc::now() - Duration::days(90)),
+                date_to: None,
+            },
+        )
+        .await?;
+
+    dbg!(&history);
+
+    let query = queries
+        .queries
+        .into_iter()
+        .map(|s| s.query_id)
+        .next()
+        .unwrap();
+
+    let history = client
+        .get_query_history(
+            &host.host_id,
+            &query,
+            &QueryHistoryRequest {
+                query_indicator: vec![
+                    ApiQueryIndicator::AvgClickPosition,
+                    ApiQueryIndicator::AvgShowPosition,
+                    ApiQueryIndicator::TotalClicks,
+                    ApiQueryIndicator::TotalShows,
+                ],
+                device_type_indicator: None,
+                date_from: None,
+                date_to: None,
+            },
+        )
+        .await?;
 
     dbg!(&history);
 
