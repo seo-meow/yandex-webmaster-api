@@ -942,35 +942,126 @@ pub struct ExternalLink {
 // Diagnostics
 // ============================================================================
 
-/// Site diagnostics response
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct DiagnosticsResponse {
-    /// Diagnostic items
-    pub items: Vec<DiagnosticItem>,
-}
-
-/// Diagnostic item
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct DiagnosticItem {
-    /// Item type
-    pub item_type: String,
-    /// Severity level
-    pub severity: DiagnosticSeverity,
-    /// Description
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-}
-
-/// Diagnostic severity
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+/// Site problem type
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum DiagnosticSeverity {
-    /// Critical issue
-    Critical,
-    /// Warning
-    Warning,
-    /// Informational
-    Info,
+pub enum ApiSiteProblemTypeEnum {
+    // FATAL
+    /// Robots couldn't visit the site (server settings or high load)
+    ConnectFailed,
+    /// Site prohibited for indexing in robots.txt
+    DisallowedInRobots,
+    /// Failed to connect to server due to DNS error
+    DnsError,
+    /// Site's home page returns an error
+    MainPageError,
+    /// Security threats or issues detected
+    Threats,
+
+    // CRITICAL
+    /// Some pages with GET parameters duplicate content of other pages
+    InsignificantCgiParameter,
+    /// Slow server response
+    SlowAvgResponseTime,
+    /// Invalid SSL certificate settings
+    SslCertificateError,
+    /// Some pages respond with 4xx HTTP code for an hour
+    #[serde(rename = "URL_ALERT_4XX")]
+    UrlAlert4xx,
+    /// Some pages respond with 5xx HTTP code for an hour
+    #[serde(rename = "URL_ALERT_5XX")]
+    UrlAlert5xx,
+
+    // POSSIBLE_PROBLEM
+    /// Useful pages found that are closed from indexing
+    DisallowedUrlsAlert,
+    /// Many pages missing Description meta tag
+    DocumentsMissingDescription,
+    /// Title element missing on many pages
+    DocumentsMissingTitle,
+    /// Some pages have identical title and Description
+    DuplicateContentAttrs,
+    /// Some pages contain identical content
+    DuplicatePages,
+    /// Errors in robots.txt file
+    ErrorInRobotsTxt,
+    /// Errors found in Sitemap file
+    ErrorsInSitemaps,
+    /// Favicon file unavailable on site
+    FaviconError,
+    /// Main mirror doesn't use HTTPS protocol
+    MainMirrorIsNotHttps,
+    /// Main page redirects to another site
+    MainPageRedirects,
+    /// No Yandex.Metrica counter linked to site
+    NoMetrikaCounterBinding,
+    /// Site crawling using Yandex.Metrica counters not enabled
+    NoMetrikaCounterCrawlEnabled,
+    /// robots.txt file not found
+    NoRobotsTxt,
+    /// No Sitemap files used by robot
+    NoSitemaps,
+    /// Sitemap files haven't been updated for a long time
+    NoSitemapModifications,
+    /// Robot failed to index marked videos on site
+    NonWorkingVideo,
+    /// Display of non-existent files and pages configured incorrectly
+    #[serde(rename = "SOFT_404")]
+    Soft404,
+    /// Site subdomains found in search results
+    TooManyDomainsOnSearch,
+    /// User agreement for video display added to Webmaster was rejected
+    VideohostOfferFailed,
+    /// User agreement for video display missing for site
+    VideohostOfferIsNeeded,
+    /// Special agreement with Yandex needed for site cooperation
+    VideohostOfferNeedPaper,
+
+    // RECOMMENDATION
+    /// Add favicon in SVG format or 120×120 pixels size
+    BigFaviconAbsent,
+    /// Favicon file not found - robot couldn't load image for browser tab
+    FaviconProblem,
+    /// Yandex.Metrica counter error
+    NoMetrikaCounter,
+    /// Site region not set
+    NoRegions,
+    /// Site not registered in Yandex.Directory
+    NotInSprav,
+    /// Site not optimized for mobile devices
+    NotMobileFriendly,
+    /// Yandex.Vygoda not connected to site
+    VygodaPossibleActivation,
+}
+
+/// Site problem state
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiSiteProblemState {
+    /// Present on the site
+    Present,
+    /// Missing
+    Absent,
+    /// Not enough data to determine if there are issues
+    Undefined,
+}
+
+/// Site diagnostics response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct DiagnosticsResponse {
+    /// Problems by type
+    pub problems: HashMap<ApiSiteProblemTypeEnum, SiteProblemInfo>,
+}
+
+/// Site problem information
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SiteProblemInfo {
+    /// Issue type (severity)
+    pub severity: SiteProblemSeverityEnum,
+    /// State of the issue
+    pub state: ApiSiteProblemState,
+    /// Date the issue status was last changed
+    pub last_state_update: Option<DateTime<Utc>>,
 }
 
 // ============================================================================

@@ -2,7 +2,14 @@ use chrono::{Duration, Utc};
 use rand::distr::{Alphanumeric, SampleString};
 use std::fs::File;
 use std::io::Read;
-use yandex_webmaster_api::{AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField, ExplicitVerificationType, GetIndexingSamplesRequest, GetRecrawlTasksRequest, GetSearchEventsSamplesRequest, GetSearchUrlsSamplesRequest, GetSitemapsRequest, GetUserSitemapsRequest, IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest, RecrawlRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
+use yandex_webmaster_api::{
+    AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField,
+    ExplicitVerificationType, GetIndexingSamplesRequest, GetRecrawlTasksRequest,
+    GetSearchEventsSamplesRequest, GetSearchUrlsSamplesRequest, GetSitemapsRequest,
+    GetUserSitemapsRequest, IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest,
+    QueryHistoryRequest, RecrawlRequest, SqiHistoryRequest, VerificationState, VerificationType,
+    YandexWebmasterClient,
+};
 
 async fn new_client() -> anyhow::Result<YandexWebmasterClient> {
     let mut str = String::new();
@@ -420,28 +427,59 @@ async fn reindex() -> anyhow::Result<()> {
         .find(|s| s.verified)
         .unwrap();
 
-    let task = client.recrawl_urls(&host.host_id, &RecrawlRequest {
-        url: "https://seomeow.com".to_string(),
-    }).await?;
+    let task = client
+        .recrawl_urls(
+            &host.host_id,
+            &RecrawlRequest {
+                url: "https://seomeow.com".to_string(),
+            },
+        )
+        .await?;
 
     dbg!(&task);
 
-    let status = client.get_recrawl_task(&host.host_id, &task.task_id).await?;
+    let status = client
+        .get_recrawl_task(&host.host_id, &task.task_id)
+        .await?;
 
     dbg!(&status);
 
-    let tasks = client.get_recrawl_tasks(&host.host_id, &GetRecrawlTasksRequest {
-        offset: None,
-        limit: None,
-        date_from: None,
-        date_to: None,
-    }).await?;
+    let tasks = client
+        .get_recrawl_tasks(
+            &host.host_id,
+            &GetRecrawlTasksRequest {
+                offset: None,
+                limit: None,
+                date_from: None,
+                date_to: None,
+            },
+        )
+        .await?;
 
     dbg!(&tasks);
 
     let quota = client.get_recrawl_quota(&host.host_id).await?;
 
     dbg!(&quota);
+
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+async fn site_diagnostics() -> anyhow::Result<()> {
+    let client = new_client().await?;
+
+    let host = client
+        .get_hosts()
+        .await?
+        .into_iter()
+        .find(|s| s.verified)
+        .unwrap();
+
+    let diagnostics = client.get_diagnostics(&host.host_id).await?;
+
+    dbg!(&diagnostics);
 
     Ok(())
 }
