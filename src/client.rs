@@ -75,9 +75,7 @@ impl YandexWebmasterClient {
     #[instrument(skip(oauth_token, client))]
     pub async fn with_client(oauth_token: String, client: ClientBuilder) -> Result<Self> {
         // Build the HTTP client with middleware
-        let client = client
-            .with(AuthMiddleware::new(oauth_token))
-            .build();
+        let client = client.with(AuthMiddleware::new(oauth_token)).build();
 
         // Fetch user information
         let user_response = Self::fetch_user(&client).await?;
@@ -565,10 +563,17 @@ impl YandexWebmasterClient {
 
     /// Get broken internal links samples
     #[instrument(skip(self))]
-    pub async fn get_broken_links(&self, host_id: &str) -> Result<BrokenLinksResponse> {
+    pub async fn get_broken_links(
+        &self,
+        host_id: &str,
+        request: &BrokenLinksRequest,
+    ) -> Result<BrokenLinksResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/links/internal/broken/samples",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/links/internal/broken/samples?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -578,21 +583,31 @@ impl YandexWebmasterClient {
     pub async fn get_broken_links_history(
         &self,
         host_id: &str,
-        request: &IndexingHistoryRequest,
-    ) -> Result<IndexingHistoryResponse> {
+        request: &BrokenLinkHistoryRequest,
+    ) -> Result<BrokenLinkHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/links/internal/broken/history",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/links/internal/broken/history?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     /// Get external backlinks samples
     #[instrument(skip(self))]
-    pub async fn get_external_links(&self, host_id: &str) -> Result<ExternalLinksResponse> {
+    pub async fn get_external_links(
+        &self,
+        host_id: &str,
+        request: &ExternalLinksRequest,
+    ) -> Result<ExternalLinksResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/links/external/samples",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/links/external/samples?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -602,13 +617,12 @@ impl YandexWebmasterClient {
     pub async fn get_external_links_history(
         &self,
         host_id: &str,
-        request: &IndexingHistoryRequest,
-    ) -> Result<IndexingHistoryResponse> {
+    ) -> Result<ExternalLinksHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/links/external/history",
+            "{}/user/{}/hosts/{}/links/external/history?indicator=LINKS_TOTAL_COUNT",
             API_BASE_URL, self.user_id, host_id
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     // ============================================================================

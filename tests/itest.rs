@@ -4,11 +4,11 @@ use std::fs::File;
 use std::io::Read;
 use yandex_webmaster_api::{
     AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField,
-    ExplicitVerificationType, GetIndexingSamplesRequest, GetRecrawlTasksRequest,
-    GetSearchEventsSamplesRequest, GetSearchUrlsSamplesRequest, GetSitemapsRequest,
-    GetUserSitemapsRequest, IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest,
-    QueryHistoryRequest, RecrawlRequest, SqiHistoryRequest, VerificationState, VerificationType,
-    YandexWebmasterClient,
+    BrokenLinkHistoryRequest, BrokenLinksRequest, ExplicitVerificationType, ExternalLinksRequest,
+    GetIndexingSamplesRequest, GetRecrawlTasksRequest, GetSearchEventsSamplesRequest,
+    GetSearchUrlsSamplesRequest, GetSitemapsRequest, GetUserSitemapsRequest,
+    IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest,
+    RecrawlRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient,
 };
 
 async fn new_client() -> anyhow::Result<YandexWebmasterClient> {
@@ -480,6 +480,62 @@ async fn site_diagnostics() -> anyhow::Result<()> {
     let diagnostics = client.get_diagnostics(&host.host_id).await?;
 
     dbg!(&diagnostics);
+
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+async fn links() -> anyhow::Result<()> {
+    let client = new_client().await?;
+
+    let host = client
+        .get_hosts()
+        .await?
+        .into_iter()
+        .find(|s| s.verified)
+        .unwrap();
+
+    let links = client
+        .get_broken_links(
+            &host.host_id,
+            &BrokenLinksRequest {
+                indicator: None,
+                offset: None,
+                limit: None,
+            },
+        )
+        .await?;
+
+    dbg!(&links);
+
+    let history = client
+        .get_broken_links_history(
+            &host.host_id,
+            &BrokenLinkHistoryRequest {
+                date_from: None,
+                date_to: None,
+            },
+        )
+        .await?;
+
+    dbg!(&history);
+
+    let links = client
+        .get_external_links(
+            &host.host_id,
+            &ExternalLinksRequest {
+                offset: None,
+                limit: None,
+            },
+        )
+        .await?;
+
+    dbg!(&links);
+
+    let history = client.get_external_links_history(&host.host_id).await?;
+
+    dbg!(&history);
 
     Ok(())
 }

@@ -900,11 +900,39 @@ pub struct RecrawlQuotaResponse {
 // Links
 // ============================================================================
 
+/// Internal link indicators
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiInternalLinksBrokenIndicator {
+    /// The total number of known external links to the site
+    SiteError,
+    /// The page doesn't exist or is prohibited from indexing
+    DisallowedByUser,
+    /// Not supported by the main Search indexing robot
+    UnsupportedByRobot,
+}
+
+/// Query analytics request parameters
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BrokenLinksRequest {
+    /// The broken link indicator — the reason the link doesn't work (ApiInternalLinksBrokenIndicator). You can specify multiple indicators. If the indicator is omitted, the report will contain all link types.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub indicator: Option<Vec<ApiInternalLinksBrokenIndicator>>,
+    /// List offset (minimum: 0, default: 0)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<i32>,
+    /// Page size (1-500, default: 500)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
 /// Broken internal links samples
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BrokenLinksResponse {
-    /// Samples
-    pub samples: Vec<BrokenLink>,
+    /// The number of example links available
+    pub count: i32,
+    /// The URL of the page that contains the link to the site
+    pub links: Vec<BrokenLink>,
 }
 
 /// Broken link information
@@ -914,16 +942,57 @@ pub struct BrokenLink {
     pub source_url: String,
     /// Destination URL
     pub destination_url: String,
-    /// Last check date
+    /// The date when the link was detected
+    pub discovery_date: NaiveDate,
+    /// The date when the robot last visited the target page
+    pub source_last_access_date: NaiveDate,
+}
+
+/// Broken link history request
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct BrokenLinkHistoryRequest {
+    /// Date from
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub last_check: Option<DateTime<Utc>>,
+    pub date_from: Option<DateTime<Utc>>,
+    /// Date to
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_to: Option<DateTime<Utc>>,
+}
+
+/// Broken link history point
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BrokenLinkHistoryPoint {
+    /// Date
+    pub date: DateTime<Utc>,
+    /// Value
+    pub value: f64,
+}
+
+/// Broken link history response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BrokenLinkHistoryResponse {
+    /// The reason the link doesn't work
+    pub indicators: HashMap<ApiInternalLinksBrokenIndicator, Vec<BrokenLinkHistoryPoint>>,
+}
+
+/// External links request parameter
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExternalLinksRequest {
+    /// List offset (minimum: 0, default: 0)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<i32>,
+    /// Page size (1-500, default: 500)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
 }
 
 /// External backlinks samples
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ExternalLinksResponse {
+    /// The number of example links available
+    pub count: i32,
     /// Samples
-    pub samples: Vec<ExternalLink>,
+    pub links: Vec<ExternalLink>,
 }
 
 /// External link information
@@ -933,9 +1002,34 @@ pub struct ExternalLink {
     pub source_url: String,
     /// Destination URL
     pub destination_url: String,
-    /// Discovery date
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discovered_date: Option<DateTime<Utc>>,
+    /// The date when the link was detected
+    pub discovery_date: NaiveDate,
+    /// The date when the robot last visited the target page
+    pub source_last_access_date: NaiveDate,
+}
+
+/// Indicators of external links
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiExternalLinksIndicator {
+    /// The total number of known external links to the host
+    LinksTotalCount,
+}
+
+/// Indexing history response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ExternalLinksHistoryResponse {
+    /// History indicators by status
+    pub indicators: HashMap<ApiExternalLinksIndicator, Vec<ExternalLinksHistoryPoint>>,
+}
+
+/// Indexing history point
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ExternalLinksHistoryPoint {
+    /// Date
+    pub date: DateTime<Utc>,
+    /// Value
+    pub value: f64,
 }
 
 // ============================================================================
