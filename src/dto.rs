@@ -72,15 +72,6 @@ pub struct FullHostInfo {
     pub host_display_name: Option<String>,
 }
 
-/// Request to add a new host
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct AddHostRequest {
-    /// Host URL to add
-    pub host_url: String,
-    /// Verification type
-    pub verification_type: VerificationType,
-}
-
 /// Response from adding a new host
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AddHostResponse {
@@ -519,13 +510,6 @@ pub struct UserSitemapInfo {
     pub added_date: DateTime<Utc>,
 }
 
-/// Request to add a sitemap
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct AddSitemapRequest {
-    /// Sitemap URL
-    pub url: String,
-}
-
 /// Response from adding a sitemap
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AddSitemapResponse {
@@ -822,13 +806,6 @@ pub struct SearchEventsSample {
 // ============================================================================
 // Recrawl (Reindexing)
 // ============================================================================
-
-/// Request to recrawl a URL
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct RecrawlRequest {
-    /// URL of the page to be sent for reindexing
-    pub url: String,
-}
 
 /// Response from recrawl request
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

@@ -1,4 +1,5 @@
 use reqwest_middleware::ClientBuilder;
+use serde_json::json;
 use serde_qs::ArrayFormat;
 use tracing::instrument;
 
@@ -129,9 +130,17 @@ impl YandexWebmasterClient {
 
     /// Add a new site
     #[instrument(skip(self))]
-    pub async fn add_host(&self, request: &AddHostRequest) -> Result<AddHostResponse> {
+    pub async fn add_host(
+        &self,
+        host_url: &str,
+        verification_type: VerificationType,
+    ) -> Result<AddHostResponse> {
         let url = format!("{}/user/{}/hosts", API_BASE_URL, self.user_id);
-        self.post(&url, request).await
+        self.post(
+            &url,
+            &json!({ "host_url": host_url.to_string(), "verification_type": verification_type }),
+        )
+        .await
     }
 
     /// Get information about a specific site
@@ -329,16 +338,13 @@ impl YandexWebmasterClient {
 
     /// Add a new sitemap file
     #[instrument(skip(self))]
-    pub async fn add_sitemap(
-        &self,
-        host_id: &str,
-        request: &AddSitemapRequest,
-    ) -> Result<AddSitemapResponse> {
+    pub async fn add_sitemap(&self, host_id: &str, url: &str) -> Result<AddSitemapResponse> {
+        let body = json!({ "url": url.to_string() });
         let url = format!(
             "{}/user/{}/hosts/{}/user-added-sitemaps",
             API_BASE_URL, self.user_id, host_id
         );
-        self.post(&url, request).await
+        self.post(&url, &body).await
     }
 
     /// Get user-submitted sitemap details
@@ -508,16 +514,13 @@ impl YandexWebmasterClient {
 
     /// Request page recrawl
     #[instrument(skip(self))]
-    pub async fn recrawl_urls(
-        &self,
-        host_id: &str,
-        request: &RecrawlRequest,
-    ) -> Result<RecrawlResponse> {
+    pub async fn recrawl_urls(&self, host_id: &str, url: &str) -> Result<RecrawlResponse> {
+        let body = json!({ "url": url });
         let url = format!(
             "{}/user/{}/hosts/{}/recrawl/queue",
             API_BASE_URL, self.user_id, host_id
         );
-        self.post(&url, request).await
+        self.post(&url, &body).await
     }
 
     /// Get list of recrawl tasks

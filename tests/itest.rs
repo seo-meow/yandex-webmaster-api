@@ -3,12 +3,12 @@ use rand::distr::{Alphanumeric, SampleString};
 use std::fs::File;
 use std::io::Read;
 use yandex_webmaster_api::{
-    AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField,
-    BrokenLinkHistoryRequest, BrokenLinksRequest, ExplicitVerificationType, ExternalLinksRequest,
-    GetIndexingSamplesRequest, GetRecrawlTasksRequest, GetSearchEventsSamplesRequest,
-    GetSearchUrlsSamplesRequest, GetSitemapsRequest, GetUserSitemapsRequest,
-    IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest,
-    RecrawlRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient,
+    ApiQueryIndicator, ApiQueryOrderField, BrokenLinkHistoryRequest, BrokenLinksRequest,
+    ExplicitVerificationType, ExternalLinksRequest, GetIndexingSamplesRequest,
+    GetRecrawlTasksRequest, GetSearchEventsSamplesRequest, GetSearchUrlsSamplesRequest,
+    GetSitemapsRequest, GetUserSitemapsRequest, IndexingHistoryRequest, PopularQueriesRequest,
+    QueryAnalyticsRequest, QueryHistoryRequest, SqiHistoryRequest, VerificationState,
+    VerificationType, YandexWebmasterClient,
 };
 
 async fn new_client() -> anyhow::Result<YandexWebmasterClient> {
@@ -59,10 +59,7 @@ async fn should_create_and_verify_host() -> anyhow::Result<()> {
     let client = new_client().await?;
 
     let host = client
-        .add_host(&AddHostRequest {
-            host_url: generate_random_host(),
-            verification_type: VerificationType::Dns,
-        })
+        .add_host(&generate_random_host(), VerificationType::Dns)
         .await?;
 
     dbg!(&host);
@@ -242,9 +239,7 @@ async fn work_with_sitemaps() -> anyhow::Result<()> {
     let sm = client
         .add_sitemap(
             &host.host_id,
-            &AddSitemapRequest {
-                url: format!("{}sitemap-test.xml", &host.ascii_host_url),
-            },
+            &format!("{}sitemap-test.xml", &host.ascii_host_url),
         )
         .await?;
 
@@ -428,12 +423,7 @@ async fn reindex() -> anyhow::Result<()> {
         .unwrap();
 
     let task = client
-        .recrawl_urls(
-            &host.host_id,
-            &RecrawlRequest {
-                url: "https://seomeow.com".to_string(),
-            },
-        )
+        .recrawl_urls(&host.host_id, &"https://seomeow.com")
         .await?;
 
     dbg!(&task);
