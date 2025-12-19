@@ -18,7 +18,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-yandex-webmaster-api = "0.2.0"
+yandex-webmaster-api = "1.0.0"
 ```
 
 ## Quick Start
@@ -49,87 +49,6 @@ async fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-```
-
-## API Methods
-
-### Hosts Management
-
-- `get_hosts()` - List all sites for the user
-- `add_host(request)` - Add a new site
-- `get_host(host_id)` - Get information about a specific site
-- `delete_host(host_id)` - Delete a site
-
-### Host Verification
-
-- `get_verification_status(host_id)` - Get verification status for a site
-- `verify_host(host_id, verification_type)` - Initiate verification procedure
-- `get_owners(host_id)` - Get list of verified owners
-
-### Site Statistics
-
-- `get_host_summary(host_id)` - Get site summary statistics
-- `get_sqi_history(host_id)` - Get site quality index history
-
-### Search Queries
-
-- `get_popular_queries(host_id)` - Get popular search queries
-- `get_query_analytics(host_id, request)` - Get overall query statistics
-- `get_query_history(host_id, query_id, request)` - Get statistics for a specific query
-
-### Sitemaps
-
-- `get_sitemaps(host_id)` - Get list of all sitemap files
-- `get_sitemap(host_id, sitemap_id)` - Get details of a specific sitemap
-- `get_user_sitemaps(host_id)` - Get list of user-submitted sitemaps
-- `add_sitemap(host_id, request)` - Add a new sitemap file
-- `get_user_sitemap(host_id, sitemap_id)` - Get user-submitted sitemap details
-- `delete_sitemap(host_id, sitemap_id)` - Delete a user-submitted sitemap
-
-### Indexing
-
-- `get_indexing_history(host_id, request)` - Get indexing history
-- `get_indexing_samples(host_id)` - Get sample indexed pages
-- `get_search_urls_history(host_id, request)` - Get pages in search history
-- `get_search_urls_samples(host_id)` - Get sample pages in search
-- `get_search_events_history(host_id, request)` - Get page appearance/removal history
-- `get_search_events_samples(host_id)` - Get sample page changes
-
-### Important URLs
-
-- `get_important_urls(host_id)` - Get list of important URLs
-- `get_important_urls_history(host_id)` - Get important URLs history
-
-### Recrawl Management
-
-- `recrawl_urls(host_id, request)` - Request page recrawl
-- `get_recrawl_tasks(host_id)` - Get list of recrawl tasks
-- `get_recrawl_task(host_id, task_id)` - Get recrawl task status
-- `get_recrawl_quota(host_id)` - Get recrawl quota
-
-### Links
-
-- `get_broken_links(host_id)` - Get broken internal links samples
-- `get_broken_links_history(host_id, request)` - Get broken links history
-- `get_external_links(host_id)` - Get external backlinks samples
-- `get_external_links_history(host_id, request)` - Get backlinks history
-
-### Diagnostics
-
-- `get_diagnostics(host_id)` - Get site diagnostic report
-
-## Project structure
-
-```
-.
-├── src/
-│   ├── lib.rs          # Main library entry point
-│   ├── client.rs       # API client implementation with all methods
-│   ├── dto.rs          # Data Transfer Objects (DTOs) for API requests/responses
-│   ├── error.rs        # Error types and Result alias
-│   └── middleware.rs   # OAuth authentication middleware
-├── Cargo.toml          # Project dependencies and metadata
-└── README.md           # Project documentation
 ```
 
 ## Authentication
@@ -221,3 +140,8 @@ Licensed under either of:
 - MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
+
+## TODOs
+- Add local e2e tests
+- Add RSS feeds supports
+- Add builders to DTOs
