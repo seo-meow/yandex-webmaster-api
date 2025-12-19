@@ -20,6 +20,11 @@ pub struct YandexWebmasterClient {
 }
 
 impl YandexWebmasterClient {
+    /// Create OAuth url to get token
+    pub fn oauth_url(client_id: &str) -> String {
+        format!("https://oauth.yandex.ru/authorize?response_type=token&client_id={client_id}")
+    }
+
     /// Creates a new Yandex Webmaster API client
     ///
     /// # Arguments
@@ -36,6 +41,41 @@ impl YandexWebmasterClient {
     pub async fn new(oauth_token: String) -> Result<Self> {
         // Build the HTTP client with middleware
         let client = ClientBuilder::new(reqwest::Client::new())
+            .with(AuthMiddleware::new(oauth_token))
+            .build();
+
+        // Fetch user information
+        let user_response = Self::fetch_user(&client).await?;
+
+        tracing::info!(
+            user_id = user_response.user_id,
+            "Successfully authenticated"
+        );
+
+        Ok(Self {
+            client,
+            user_id: user_response.user_id,
+            qs: serde_qs::Config::new().array_format(ArrayFormat::Unindexed),
+        })
+    }
+
+    /// Creates a new Yandex Webmaster API client
+    ///
+    /// # Arguments
+    ///
+    /// * `oauth_token` - OAuth token for authentication
+    /// * `client` - Client builder with preconfigured middleware
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The HTTP client cannot be created
+    /// - The user information cannot be fetched
+    /// - The OAuth token is invalid
+    #[instrument(skip(oauth_token, client))]
+    pub async fn with_client(oauth_token: String, client: ClientBuilder) -> Result<Self> {
+        // Build the HTTP client with middleware
+        let client = client
             .with(AuthMiddleware::new(oauth_token))
             .build();
 
