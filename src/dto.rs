@@ -575,42 +575,64 @@ pub enum SiteProblemSeverityEnum {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ApiExcludedUrlStatus {
-    /// No exclusion found
+    /// No exclusion found - robot doesn't know about page or it was unavailable
     NothingFound,
-    /// Forbidden by robots.txt
+    /// Could not connect to server when accessing site
+    HostError,
+    /// Page redirects to another page (target page is indexed)
+    RedirectNotsearchable,
+    /// HTTP error occurred when accessing page
+    HttpError,
+    /// Page indexed by canonical URL specified in rel="canonical"
+    NotCanonical,
+    /// Page belongs to secondary site mirror
+    NotMainMirror,
+    /// Robot couldn't get page content
+    ParserError,
+    /// Site indexing prohibited in robots.txt
+    RobotsHostError,
+    /// Page indexing prohibited in robots.txt
+    RobotsUrlError,
+    /// Page duplicates a site page already in search
+    Duplicate,
+    /// Page excluded after robot processed Clean-param directive
+    CleanParams,
+    /// Page excluded because robots meta tag has noindex value
+    NoIndex,
+    /// Forbidden by robots.txt (legacy)
     ForbiddenByRobotsTxt,
-    /// URL not allowed
+    /// URL not allowed (legacy)
     UrlNotAllowed,
-    /// Contains noindex meta tag
+    /// Contains noindex meta tag (legacy)
     ContainsNoindexMetaTag,
-    /// Contains noindex X-Robots-Tag header
+    /// Contains noindex X-Robots-Tag header (legacy)
     ContainsNoindexXRobotsTagHeader,
-    /// Sitemap forbidden
+    /// Sitemap forbidden (legacy)
     SitemapForbidden,
-    /// Sitemap not allowed
+    /// Sitemap not allowed (legacy)
     SitemapNotAllowed,
-    /// Low quality
+    /// Low quality - removed due to low quality
     LowQuality,
-    /// Alternative duplicate
+    /// Alternative duplicate (legacy)
     AlternativeDuplicate,
-    /// User duplicate
+    /// User duplicate (legacy)
     UserDuplicate,
-    /// Canonical duplicate
+    /// Canonical duplicate (legacy)
     CanonicalDuplicate,
-    /// Redirect duplicate
+    /// Redirect duplicate (legacy)
     RedirectDuplicate,
-    /// Moved permanently
+    /// Moved permanently (legacy)
     MovedPermanently,
-    /// Moved temporarily
+    /// Moved temporarily (legacy)
     MovedTemporarily,
-    /// Malware detected
+    /// Malware detected (legacy)
     MalwareDetected,
-    /// Phishing detected
+    /// Phishing detected (legacy)
     PhishingDetected,
-    /// Adult content
+    /// Adult content (legacy)
     AdultContent,
-    /// Other reason
-    OtherReason,
+    /// Other reason - robot doesn't have updated data
+    Other,
 }
 
 /// Important URL change indicator
@@ -683,6 +705,118 @@ pub struct IndexingSample {
     pub http_code: i32,
     /// Last access date
     pub access_date: DateTime<Utc>,
+}
+
+// ============================================================================
+// Search URLs (Pages in Search)
+// ============================================================================
+
+/// Search event type
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ApiSearchEventEnum {
+    /// Page appeared in search results
+    AppearedInSearch,
+    /// Page removed from search results
+    RemovedFromSearch,
+}
+
+/// Search URLs history response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SearchUrlsHistoryResponse {
+    /// History points
+    pub history: Vec<SearchUrlsHistoryPoint>,
+}
+
+/// Search URLs history point
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SearchUrlsHistoryPoint {
+    /// Date and time when search output was updated
+    pub date: DateTime<Utc>,
+    /// Number of pages in search
+    pub value: i64,
+}
+
+/// Get search URLs samples request
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct GetSearchUrlsSamplesRequest {
+    /// Offset for pagination
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<i32>,
+    /// Limit for pagination (1-100, default 50)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
+/// Search URLs samples response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SearchUrlsSamplesResponse {
+    /// Total number of available examples
+    pub count: i32,
+    /// Sample pages
+    pub samples: Vec<SearchUrlsSample>,
+}
+
+/// Search URLs sample
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SearchUrlsSample {
+    /// Page URL
+    pub url: String,
+    /// Date of the page version in search
+    pub last_access: DateTime<Utc>,
+    /// Page heading
+    pub title: String,
+}
+
+/// Search events history response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SearchEventsHistoryResponse {
+    /// History indicators by event type
+    pub indicators: HashMap<ApiSearchEventEnum, Vec<SearchUrlsHistoryPoint>>,
+}
+
+/// Get search events samples request
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct GetSearchEventsSamplesRequest {
+    /// Offset for pagination
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub offset: Option<i32>,
+    /// Limit for pagination (1-100, default 50)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+}
+
+/// Search events samples response
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SearchEventsSamplesResponse {
+    /// Total number of available examples
+    pub count: i32,
+    /// Sample pages
+    pub samples: Vec<SearchEventsSample>,
+}
+
+/// Search events sample
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SearchEventsSample {
+    /// Page URL
+    pub url: String,
+    /// Page heading
+    pub title: String,
+    /// Date when page appeared or was excluded
+    pub event_date: DateTime<Utc>,
+    /// Date when page was last crawled before appearing or being excluded
+    pub last_access: DateTime<Utc>,
+    /// The appearance or removal of the page
+    pub event: ApiSearchEventEnum,
+    /// Reason the page was excluded
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_url_status: Option<ApiExcludedUrlStatus>,
+    /// Page's HTTP response code for HTTP_ERROR status
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bad_http_status: Option<i32>,
+    /// Another address of the page (redirect target, canonical, or duplicate)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_url: Option<String>,
 }
 
 // ============================================================================

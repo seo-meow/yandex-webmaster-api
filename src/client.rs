@@ -371,20 +371,30 @@ impl YandexWebmasterClient {
         &self,
         host_id: &str,
         request: &IndexingHistoryRequest,
-    ) -> Result<IndexingHistoryResponse> {
+    ) -> Result<SearchUrlsHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-urls/in-search/history",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/search-urls/in-search/history?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     /// Get sample pages in search
     #[instrument(skip(self))]
-    pub async fn get_search_urls_samples(&self, host_id: &str) -> Result<IndexingSamplesResponse> {
+    pub async fn get_search_urls_samples(
+        &self,
+        host_id: &str,
+        request: &GetSearchUrlsSamplesRequest,
+    ) -> Result<SearchUrlsSamplesResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-urls/in-search/samples",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/search-urls/in-search/samples?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
@@ -395,12 +405,15 @@ impl YandexWebmasterClient {
         &self,
         host_id: &str,
         request: &IndexingHistoryRequest,
-    ) -> Result<IndexingHistoryResponse> {
+    ) -> Result<SearchEventsHistoryResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-urls/events/history",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/search-urls/events/history?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
-        self.post(&url, request).await
+        self.get(&url).await
     }
 
     /// Get sample page changes
@@ -408,10 +421,14 @@ impl YandexWebmasterClient {
     pub async fn get_search_events_samples(
         &self,
         host_id: &str,
-    ) -> Result<IndexingSamplesResponse> {
+        request: &GetSearchEventsSamplesRequest,
+    ) -> Result<SearchEventsSamplesResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/search-urls/events/samples",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/search-urls/events/samples?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }
