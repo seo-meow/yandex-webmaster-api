@@ -11,6 +11,7 @@ documentation = "https://docs.rs/yandex-webmaster-api"
 readme = "README.md"
 keywords = ["yandex", "webmaster", "api", "seo", "search"]
 categories = ["api-bindings", "web-programming::http-client"]
+exclude = [".github/*", ".jscpd.json"]
 
 [dependencies]
 # async
