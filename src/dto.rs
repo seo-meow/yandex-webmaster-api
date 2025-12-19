@@ -820,14 +820,14 @@ pub struct SearchEventsSample {
 }
 
 // ============================================================================
-// Recrawl
+// Recrawl (Reindexing)
 // ============================================================================
 
-/// Request to recrawl URLs
+/// Request to recrawl a URL
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RecrawlRequest {
-    /// URLs to recrawl
-    pub urls: Vec<String>,
+    /// URL of the page to be sent for reindexing
+    pub url: String,
 }
 
 /// Response from recrawl request
@@ -835,9 +835,23 @@ pub struct RecrawlRequest {
 pub struct RecrawlResponse {
     /// Task ID
     pub task_id: String,
-    /// Number of URLs in queue
+}
+
+/// Get recrawl tasks request
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct GetRecrawlTasksRequest {
+    /// Offset in the list
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub quota_remainder: Option<i64>,
+    pub offset: Option<i32>,
+    /// Page size (minimum 1, default 50)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+    /// Start of the date range
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_from: Option<DateTime<Utc>>,
+    /// End of the date range
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub date_to: Option<DateTime<Utc>>,
 }
 
 /// Recrawl task list response
@@ -852,24 +866,24 @@ pub struct RecrawlTasksResponse {
 pub struct RecrawlTask {
     /// Task ID
     pub task_id: String,
-    /// Task state
-    pub state: RecrawlTaskState,
-    /// Added date
+    /// URL of the page sent for reindexing
+    pub url: String,
+    /// Date the reindexing request was created
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub added_date: Option<DateTime<Utc>>,
+    pub added_time: Option<DateTime<Utc>>,
+    /// Status of the reindexing request
+    pub state: RecrawlTaskState,
 }
 
-/// Recrawl task state
+/// Recrawl task state (reindexing request status)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RecrawlTaskState {
-    /// Task in queue
-    InQueue,
-    /// Task processing
-    Processing,
-    /// Task completed
-    Completed,
-    /// Task failed
+    /// Request is being processed
+    InProgress,
+    /// Robot crawled the URL
+    Done,
+    /// Robot failed to crawl the page
     Failed,
 }
 
@@ -877,9 +891,9 @@ pub enum RecrawlTaskState {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RecrawlQuotaResponse {
     /// Daily quota
-    pub quota: i64,
-    /// Quota remainder
-    pub quota_remainder: i64,
+    pub daily_quota: i32,
+    /// Remainder of daily quota
+    pub quota_remainder: i32,
 }
 
 // ============================================================================

@@ -484,10 +484,17 @@ impl YandexWebmasterClient {
 
     /// Get list of recrawl tasks
     #[instrument(skip(self))]
-    pub async fn get_recrawl_tasks(&self, host_id: &str) -> Result<RecrawlTasksResponse> {
+    pub async fn get_recrawl_tasks(
+        &self,
+        host_id: &str,
+        request: &GetRecrawlTasksRequest,
+    ) -> Result<RecrawlTasksResponse> {
         let url = format!(
-            "{}/user/{}/hosts/{}/recrawl/queue",
-            API_BASE_URL, self.user_id, host_id
+            "{}/user/{}/hosts/{}/recrawl/queue?{}",
+            API_BASE_URL,
+            self.user_id,
+            host_id,
+            self.qs.serialize_string(request)?
         );
         self.get(&url).await
     }

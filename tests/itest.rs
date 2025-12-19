@@ -2,7 +2,7 @@ use chrono::{Duration, Utc};
 use rand::distr::{Alphanumeric, SampleString};
 use std::fs::File;
 use std::io::Read;
-use yandex_webmaster_api::{AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField, ExplicitVerificationType, GetIndexingSamplesRequest, GetSearchEventsSamplesRequest, GetSearchUrlsSamplesRequest, GetSitemapsRequest, GetUserSitemapsRequest, IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
+use yandex_webmaster_api::{AddHostRequest, AddSitemapRequest, ApiQueryIndicator, ApiQueryOrderField, ExplicitVerificationType, GetIndexingSamplesRequest, GetRecrawlTasksRequest, GetSearchEventsSamplesRequest, GetSearchUrlsSamplesRequest, GetSitemapsRequest, GetUserSitemapsRequest, IndexingHistoryRequest, PopularQueriesRequest, QueryAnalyticsRequest, QueryHistoryRequest, RecrawlRequest, SqiHistoryRequest, VerificationState, VerificationType, YandexWebmasterClient};
 
 async fn new_client() -> anyhow::Result<YandexWebmasterClient> {
     let mut str = String::new();
@@ -357,33 +357,91 @@ async fn search_methods() -> anyhow::Result<()> {
         .find(|s| s.verified)
         .unwrap();
 
-    let history = client.get_search_urls_history(&host.host_id, &IndexingHistoryRequest {
+    let history = client
+        .get_search_urls_history(
+            &host.host_id,
+            &IndexingHistoryRequest {
+                date_from: None,
+                date_to: None,
+            },
+        )
+        .await?;
+
+    dbg!(&history);
+
+    let samples = client
+        .get_search_urls_samples(
+            &host.host_id,
+            &GetSearchUrlsSamplesRequest {
+                offset: None,
+                limit: None,
+            },
+        )
+        .await?;
+
+    dbg!(&samples);
+
+    let history = client
+        .get_search_events_history(
+            &host.host_id,
+            &IndexingHistoryRequest {
+                date_from: None,
+                date_to: None,
+            },
+        )
+        .await?;
+
+    dbg!(&history);
+
+    let samples = client
+        .get_search_events_samples(
+            &host.host_id,
+            &GetSearchEventsSamplesRequest {
+                offset: None,
+                limit: None,
+            },
+        )
+        .await?;
+
+    dbg!(&samples);
+
+    Ok(())
+}
+
+#[tokio::test]
+#[ignore]
+async fn reindex() -> anyhow::Result<()> {
+    let client = new_client().await?;
+
+    let host = client
+        .get_hosts()
+        .await?
+        .into_iter()
+        .find(|s| s.verified)
+        .unwrap();
+
+    let task = client.recrawl_urls(&host.host_id, &RecrawlRequest {
+        url: "https://seomeow.com".to_string(),
+    }).await?;
+
+    dbg!(&task);
+
+    let status = client.get_recrawl_task(&host.host_id, &task.task_id).await?;
+
+    dbg!(&status);
+
+    let tasks = client.get_recrawl_tasks(&host.host_id, &GetRecrawlTasksRequest {
+        offset: None,
+        limit: None,
         date_from: None,
         date_to: None,
     }).await?;
 
-    dbg!(&history);
+    dbg!(&tasks);
 
-    let samples = client.get_search_urls_samples(&host.host_id, &GetSearchUrlsSamplesRequest {
-        offset: None,
-        limit: None,
-    }).await?;
+    let quota = client.get_recrawl_quota(&host.host_id).await?;
 
-    dbg!(&samples);
-
-    let history = client.get_search_events_history(&host.host_id, &IndexingHistoryRequest {
-        date_from: None,
-        date_to: None,
-    }).await?;
-
-    dbg!(&history);
-
-    let samples = client.get_search_events_samples(&host.host_id, &GetSearchEventsSamplesRequest {
-        offset: None,
-        limit: None,
-    }).await?;
-
-    dbg!(&samples);
+    dbg!(&quota);
 
     Ok(())
 }
