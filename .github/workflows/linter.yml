@@ -33,3 +33,5 @@ jobs:
           FILTER_REGEX_EXCLUDE: target/**/*
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
+          VALIDATE_RUST_2015: false
+          VALIDATE_RUST_2015: false
