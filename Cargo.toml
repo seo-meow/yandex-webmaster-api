@@ -1,6 +1,6 @@
 [package]
 name = "yandex-webmaster-api"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 authors = ["Aleksei Arsenev"]
 description = "Rust client for the Yandex Webmaster API"
