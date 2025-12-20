@@ -14,5 +14,5 @@ docker run --rm \
   -e VALIDATE_TYPESCRIPT_ES=false \
   -e VALIDATE_JSON=false \
   -v "$(pwd)":/tmp/lint \
-  -u $(id -u "${USER}"):$(id -g "${USER}") \
+  -u "$(id -u \"${USER}\")":"$(id -g \"${USER}\")" \
   ghcr.io/super-linter/super-linter:latest
