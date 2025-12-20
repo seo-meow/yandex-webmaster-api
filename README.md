@@ -146,4 +146,3 @@ at your option.
 
 - Add local end-to-end tests
 - Add RSS feeds supports
-- Add builders to DTOs

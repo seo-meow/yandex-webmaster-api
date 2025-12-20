@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use typed_builder::TypedBuilder;
 
 // ============================================================================
 // User
@@ -235,7 +236,8 @@ pub struct ExcludedPagesStatistics {
 }
 
 /// Site quality index history request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct SqiHistoryRequest {
     pub date_from: Option<DateTime<Utc>>,
     pub date_to: Option<DateTime<Utc>>,
@@ -303,27 +305,33 @@ pub enum ApiDeviceTypeIndicator {
 }
 
 /// Popular queries request parameters
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, TypedBuilder)]
 pub struct PopularQueriesRequest {
     /// Indicator for sorting requests (required)
     pub order_by: ApiQueryOrderField,
     /// Indicators for displaying requests
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub query_indicator: Option<ApiQueryIndicator>,
     /// Device type indicator (default: ALL)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub device_type_indicator: Option<ApiDeviceTypeIndicator>,
     /// Start date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub date_from: Option<NaiveDate>,
     /// End date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub date_to: Option<NaiveDate>,
     /// List offset (minimum: 0, default: 0)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub offset: Option<i32>,
     /// Page size (1-500, default: 500)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub limit: Option<i32>,
 }
 
@@ -352,18 +360,21 @@ pub struct PopularQuery {
 }
 
 /// Query analytics request parameters
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, TypedBuilder)]
 pub struct QueryAnalyticsRequest {
     /// Indicators for displaying requests (can specify multiple)
     pub query_indicator: Vec<ApiQueryIndicator>,
     /// Device type indicator (default: ALL)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub device_type_indicator: Option<ApiDeviceTypeIndicator>,
     /// Start date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub date_from: Option<DateTime<Utc>>,
     /// End date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub date_to: Option<DateTime<Utc>>,
 }
 
@@ -384,18 +395,21 @@ pub struct IndicatorPoint {
 }
 
 /// Query history request parameters
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, TypedBuilder)]
 pub struct QueryHistoryRequest {
     /// Indicators for displaying requests (can specify multiple)
     pub query_indicator: Vec<ApiQueryIndicator>,
     /// Device type indicator (default: ALL)
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub device_type_indicator: Option<ApiDeviceTypeIndicator>,
     /// Start date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub date_from: Option<NaiveDate>,
     /// End date of the range
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[builder(default, setter(into, strip_option))]
     pub date_to: Option<NaiveDate>,
 }
 
@@ -437,7 +451,8 @@ pub enum ApiSitemapType {
 }
 
 /// Request parameters for getting sitemaps
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct GetSitemapsRequest {
     /// Parent sitemap ID
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -480,7 +495,8 @@ pub struct SitemapInfo {
 }
 
 /// Request parameters for getting user-added sitemaps
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct GetUserSitemapsRequest {
     /// Get files starting from the specified one (not including it, default: 0)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -634,7 +650,8 @@ pub enum ApiImportantUrlChangeIndicator {
 }
 
 /// Indexing history request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct IndexingHistoryRequest {
     /// Date from
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -661,7 +678,8 @@ pub struct IndexingHistoryPoint {
 }
 
 /// Get indexing samples request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct GetIndexingSamplesRequest {
     /// Offset for pagination
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -722,7 +740,8 @@ pub struct SearchUrlsHistoryPoint {
 }
 
 /// Get search URLs samples request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct GetSearchUrlsSamplesRequest {
     /// Offset for pagination
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -760,7 +779,8 @@ pub struct SearchEventsHistoryResponse {
 }
 
 /// Get search events samples request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct GetSearchEventsSamplesRequest {
     /// Offset for pagination
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -815,7 +835,8 @@ pub struct RecrawlResponse {
 }
 
 /// Get recrawl tasks request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct GetRecrawlTasksRequest {
     /// Offset in the list
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -889,8 +910,9 @@ pub enum ApiInternalLinksBrokenIndicator {
     UnsupportedByRobot,
 }
 
-/// Query analytics request parameters
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// Broken links request parameters
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct BrokenLinksRequest {
     /// The broken link indicator — the reason the link doesn't work (ApiInternalLinksBrokenIndicator). You can specify multiple indicators. If the indicator is omitted, the report will contain all link types.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -926,7 +948,8 @@ pub struct BrokenLink {
 }
 
 /// Broken link history request
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct BrokenLinkHistoryRequest {
     /// Date from
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -953,7 +976,8 @@ pub struct BrokenLinkHistoryResponse {
 }
 
 /// External links request parameter
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, TypedBuilder)]
+#[builder(field_defaults(default, setter(into)))]
 pub struct ExternalLinksRequest {
     /// List offset (minimum: 0, default: 0)
     #[serde(skip_serializing_if = "Option::is_none")]

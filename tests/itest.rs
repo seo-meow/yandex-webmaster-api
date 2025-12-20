@@ -124,10 +124,10 @@ async fn get_sqi() -> anyhow::Result<()> {
     let history = client
         .get_sqi_history(
             &host.host_id,
-            SqiHistoryRequest {
-                date_from: Some(Utc::now()),
-                date_to: Some(Utc::now() - Duration::days(10)),
-            },
+            SqiHistoryRequest::builder()
+                .date_from(Utc::now() - Duration::days(10))
+                .date_to(Utc::now())
+                .build(),
         )
         .await?;
 
@@ -159,15 +159,9 @@ async fn get_search_queries() -> anyhow::Result<()> {
     let queries = client
         .get_popular_queries(
             &host.host_id,
-            &PopularQueriesRequest {
-                order_by: ApiQueryOrderField::TotalShows,
-                query_indicator: None,
-                device_type_indicator: None,
-                date_from: None,
-                date_to: None,
-                offset: None,
-                limit: None,
-            },
+            &PopularQueriesRequest::builder()
+                .order_by(ApiQueryOrderField::TotalShows)
+                .build(),
         )
         .await?;
 
@@ -176,17 +170,15 @@ async fn get_search_queries() -> anyhow::Result<()> {
     let history = client
         .get_query_analytics(
             &host.host_id,
-            &QueryAnalyticsRequest {
-                query_indicator: vec![
+            &QueryAnalyticsRequest::builder()
+                .query_indicator(vec![
                     ApiQueryIndicator::AvgClickPosition,
                     ApiQueryIndicator::AvgShowPosition,
                     ApiQueryIndicator::TotalClicks,
                     ApiQueryIndicator::TotalShows,
-                ],
-                device_type_indicator: None,
-                date_from: Some(Utc::now() - Duration::days(90)),
-                date_to: None,
-            },
+                ])
+                .date_from(Utc::now() - Duration::days(90))
+                .build(),
         )
         .await?;
 
@@ -203,17 +195,14 @@ async fn get_search_queries() -> anyhow::Result<()> {
         .get_query_history(
             &host.host_id,
             &query,
-            &QueryHistoryRequest {
-                query_indicator: vec![
+            &QueryHistoryRequest::builder()
+                .query_indicator(vec![
                     ApiQueryIndicator::AvgClickPosition,
                     ApiQueryIndicator::AvgShowPosition,
                     ApiQueryIndicator::TotalClicks,
                     ApiQueryIndicator::TotalShows,
-                ],
-                device_type_indicator: None,
-                date_from: None,
-                date_to: None,
-            },
+                ])
+                .build(),
         )
         .await?;
 
@@ -246,14 +235,7 @@ async fn work_with_sitemaps() -> anyhow::Result<()> {
     dbg!(&sm);
 
     let sitemaps = client
-        .get_sitemaps(
-            &host.host_id,
-            &GetSitemapsRequest {
-                parent_id: None,
-                limit: None,
-                from: None,
-            },
-        )
+        .get_sitemaps(&host.host_id, &GetSitemapsRequest::default())
         .await?;
 
     dbg!(&sitemaps);
@@ -268,13 +250,7 @@ async fn work_with_sitemaps() -> anyhow::Result<()> {
     dbg!(&sitemap);
 
     let user_sitemaps = client
-        .get_user_sitemaps(
-            &host.host_id,
-            &GetUserSitemapsRequest {
-                offset: None,
-                limit: None,
-            },
-        )
+        .get_user_sitemaps(&host.host_id, &GetUserSitemapsRequest::default())
         .await?;
     dbg!(&user_sitemaps);
 
@@ -309,25 +285,13 @@ async fn get_indexing() -> anyhow::Result<()> {
     dbg!(&stats);
 
     let index_history = client
-        .get_indexing_history(
-            &host.host_id,
-            &IndexingHistoryRequest {
-                date_from: None,
-                date_to: None,
-            },
-        )
+        .get_indexing_history(&host.host_id, &IndexingHistoryRequest::default())
         .await?;
 
     dbg!(&index_history);
 
     let examples = client
-        .get_indexing_samples(
-            &host.host_id,
-            &GetIndexingSamplesRequest {
-                offset: None,
-                limit: None,
-            },
-        )
+        .get_indexing_samples(&host.host_id, &GetIndexingSamplesRequest::default())
         .await?;
 
     dbg!(&examples);
@@ -360,49 +324,25 @@ async fn search_methods() -> anyhow::Result<()> {
         .unwrap();
 
     let history = client
-        .get_search_urls_history(
-            &host.host_id,
-            &IndexingHistoryRequest {
-                date_from: None,
-                date_to: None,
-            },
-        )
+        .get_search_urls_history(&host.host_id, &IndexingHistoryRequest::default())
         .await?;
 
     dbg!(&history);
 
     let samples = client
-        .get_search_urls_samples(
-            &host.host_id,
-            &GetSearchUrlsSamplesRequest {
-                offset: None,
-                limit: None,
-            },
-        )
+        .get_search_urls_samples(&host.host_id, &GetSearchUrlsSamplesRequest::default())
         .await?;
 
     dbg!(&samples);
 
     let history = client
-        .get_search_events_history(
-            &host.host_id,
-            &IndexingHistoryRequest {
-                date_from: None,
-                date_to: None,
-            },
-        )
+        .get_search_events_history(&host.host_id, &IndexingHistoryRequest::default())
         .await?;
 
     dbg!(&history);
 
     let samples = client
-        .get_search_events_samples(
-            &host.host_id,
-            &GetSearchEventsSamplesRequest {
-                offset: None,
-                limit: None,
-            },
-        )
+        .get_search_events_samples(&host.host_id, &GetSearchEventsSamplesRequest::default())
         .await?;
 
     dbg!(&samples);
@@ -435,15 +375,7 @@ async fn reindex() -> anyhow::Result<()> {
     dbg!(&status);
 
     let tasks = client
-        .get_recrawl_tasks(
-            &host.host_id,
-            &GetRecrawlTasksRequest {
-                offset: None,
-                limit: None,
-                date_from: None,
-                date_to: None,
-            },
-        )
+        .get_recrawl_tasks(&host.host_id, &GetRecrawlTasksRequest::default())
         .await?;
 
     dbg!(&tasks);
@@ -487,38 +419,19 @@ async fn links() -> anyhow::Result<()> {
         .unwrap();
 
     let links = client
-        .get_broken_links(
-            &host.host_id,
-            &BrokenLinksRequest {
-                indicator: None,
-                offset: None,
-                limit: None,
-            },
-        )
+        .get_broken_links(&host.host_id, &BrokenLinksRequest::default())
         .await?;
 
     dbg!(&links);
 
     let history = client
-        .get_broken_links_history(
-            &host.host_id,
-            &BrokenLinkHistoryRequest {
-                date_from: None,
-                date_to: None,
-            },
-        )
+        .get_broken_links_history(&host.host_id, &BrokenLinkHistoryRequest::default())
         .await?;
 
     dbg!(&history);
 
     let links = client
-        .get_external_links(
-            &host.host_id,
-            &ExternalLinksRequest {
-                offset: None,
-                limit: None,
-            },
-        )
+        .get_external_links(&host.host_id, &ExternalLinksRequest::default())
         .await?;
 
     dbg!(&links);
