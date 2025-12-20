@@ -1,5 +1,9 @@
 # Yandex Webmaster API Client
 
+[<img alt="crates.io" src="https://img.shields.io/crates/v/yandex-webmaster-api" height="20">](https://crates.io/crates/yandex-webmaster-api)
+[<img alt="docs.rs" src="https://img.shields.io/docsrs/yandex-webmaster-api" height="20">](https://docs.rs/yandex-webmaster-api)
+[<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/seo-meow/yandex-webmaster-api/ci.yml?label=CI" height="20">](https://github.com/seo-meow/yandex-webmaster-api/actions?query=branch%3Amaster)
+
 Rust client library for the [Yandex Webmaster API](https://yandex.ru/dev/webmaster/).
 
 ## Features
