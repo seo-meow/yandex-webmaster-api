@@ -56,6 +56,7 @@ async fn main() -> anyhow::Result<()> {
 To use this library, you need a valid OAuth token from Yandex. You can obtain one by following the [Yandex OAuth documentation](https://yandex.ru/dev/id/doc/en/).
 
 The client automatically:
+
 1. Adds the OAuth token to all requests via middleware
 2. Fetches the user ID on creation
 3. Validates authentication by calling the `/user` endpoint
@@ -142,6 +143,7 @@ Licensed under either of:
 at your option.
 
 ## TODOs
+
 - Add local e2e tests
 - Add RSS feeds supports
 - Add builders to DTOs
