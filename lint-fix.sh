@@ -1,5 +1,5 @@
 #!/bin/bash
- docker run --rm \
+docker run --rm \
   -e RUN_LOCAL=true \
   -e FIX_MODE=true \
   -e FIX_GITHUB_ACTIONS_ZIZMOR=true \
@@ -14,5 +14,5 @@
   -e VALIDATE_TYPESCRIPT_ES=false \
   -e VALIDATE_JSON=false \
   -v "$(pwd)":/tmp/lint \
-  -u $(id -u ${USER}):$(id -g ${USER}) \
+  -u $(id -u "${USER}"):$(id -g "${USER}") \
   ghcr.io/super-linter/super-linter:latest

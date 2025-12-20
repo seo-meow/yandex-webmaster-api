@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Stable with rustfmt and clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
       - name: Lint Codebase
         id: super-linter
         uses: super-linter/super-linter@v8

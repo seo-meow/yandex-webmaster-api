@@ -144,6 +144,6 @@ at your option.
 
 ## TODOs
 
-- Add local e2e tests
+- Add local end-to-end tests
 - Add RSS feeds supports
 - Add builders to DTOs
