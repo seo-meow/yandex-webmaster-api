@@ -1,0 +1,35 @@
+name: Create release
+on:
+  workflow_run:
+    workflows: [Continuous Integration, CodeQL]
+    branches: [master]
+    types:
+      - completed
+jobs:
+  build:
+    permissions: write-all
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ssh-key: "${{ secrets.RELEASE_KEY }}"
+
+      - name : Retrieve Version
+        run: |
+          echo "::set-output name=current-version::$(cat Cargo.toml | grep "^version = \".*\"$" | sed -E 's/version = \"(.+)\"/\1/')"
+        id: package-version
+
+      - name: Create tag
+        run: "git tag ${{ steps.package-version.outputs.current-version }}"
+      - name: Push tag
+        continue-on-error: true # next task will not create a release anyway
+        run: "git push origin ${{ steps.package-version.outputs.current-version }}"
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "${{ steps.package-version.outputs.current-version }}"
+          allowUpdates: false
+          skipIfReleaseExists: true
+
