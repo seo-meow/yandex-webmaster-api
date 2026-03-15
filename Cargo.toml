@@ -31,8 +31,8 @@ thiserror = "2.0"
 chrono = { version = "0.4", features = ["serde"] }
 
 # http client
-reqwest = { version = "0.12.25", features = ["json"] }
-reqwest-middleware = "0.4.2"
+reqwest = { version = "0.13", features = ["json"] }
+reqwest-middleware = "0.5.0"
 http = "1.0"
 
 # tracing
